@@ -10,6 +10,8 @@ import {
     ActivityIndicator,
     TouchableOpacity,
 } from 'react-native';
+import DifficultyBadge from '../components/DificultadBadge';
+import RatingStars from '../components/RatingStars';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { Ruta } from '../types';
@@ -121,12 +123,17 @@ export default function DetailScreen({ navigation, route }: Props) {
     return (
         <ScrollView style={styles.container}>
             {/* Foto principal (si existe) */}
-            {ruta.foto_principal && (
+            {ruta.foto_principal ? (
                 <Image
                     source={{ uri: ruta.foto_principal }}
                     style={styles.foto}
                     resizeMode="cover"
                 />
+            ) : (
+                <View style={styles.fotoPlaceholder}>
+                    <MaterialCommunityIcons name="image-off" size={48} color="#CED4DA" />
+                    <Text style={styles.fotoPlaceholderText}>Sin foto</Text>
+                </View>
             )}
 
             {/* Encabezado con nombre y zona */}
@@ -140,9 +147,7 @@ export default function DetailScreen({ navigation, route }: Props) {
 
             {/* Badge de dificultad */}
             <View style={styles.section}>
-                <View style={[styles.dificultadBadge, getDificultadColor(ruta.dificultad)]}>
-                    <Text style={styles.dificultadText}>{ruta.dificultad}</Text>
-                </View>
+                <DifficultyBadge dificultad={ruta.dificultad} />
             </View>
 
             {/* Información principal en grid */}
@@ -174,17 +179,7 @@ export default function DetailScreen({ navigation, route }: Props) {
             {/* Valoración (si existe) */}
             {ruta.valoracion && (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Valoración</Text>
-                    <View style={styles.valoracionContainer}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <MaterialCommunityIcons
-                                key={star}
-                                name={star <= ruta.valoracion! ? 'star' : 'star-outline'}
-                                size={32}
-                                color="#FFC107"
-                            />
-                        ))}
-                    </View>
+                    <RatingStars rating={ruta.valoracion} readonly size={36} />
                 </View>
             )}
 
@@ -450,5 +445,17 @@ const styles = StyleSheet.create({
     },
     bottomSpacer: {
         height: 40,
+    },
+    fotoPlaceholder: {
+        width: '100%',
+        height: 250,
+        backgroundColor: '#F8F9FA',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fotoPlaceholderText: {
+        marginTop: 8,
+        fontSize: 16,
+        color: '#6C757D',
     },
 });

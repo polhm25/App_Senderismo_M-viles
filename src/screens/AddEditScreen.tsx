@@ -1,19 +1,13 @@
 // src/screens/AddEditScreen.tsx
+import { tomarFoto, seleccionarDeGaleria, mostrarOpcionesFoto } from '../helpers/camara';
+import { obtenerUbicacionActual, formatearCoordenadas, verificarGPSActivado } from '../helpers/localizacion';
 import React, { useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    Alert,
-    ActivityIndicator,
-    Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform, Image } from 'react-native';
+import RatingStars from '../components/RatingStars';
+import DifficultyBadge from '../components/DificultadBadge';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import { Dificultad, RutaFormData, formDataToRuta } from '../types';
+import { Dificultad, RutaFormData, formDataToRuta, Ruta, rutaToFormData } from '../types';
 import { obtenerRutaPorId, insertarRuta, actualizarRuta } from '../database/db';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -63,20 +57,7 @@ export default function AddEditScreen({ navigation, route }: Props) {
             const ruta = await obtenerRutaPorId(rutaId!);
 
             if (ruta) {
-                setFormData({
-                    nombre: ruta.nombre,
-                    zona: ruta.zona,
-                    fecha_realizacion: new Date(ruta.fecha_realizacion),
-                    duracion_horas: ruta.duracion_horas.toString(),
-                    distancia_km: ruta.distancia_km.toString(),
-                    dificultad: ruta.dificultad,
-                    desnivel_positivo: ruta.desnivel_positivo?.toString() || '',
-                    valoracion: ruta.valoracion || 3,
-                    notas: ruta.notas || '',
-                    foto_principal: ruta.foto_principal,
-                    punto_inicio_lat: ruta.punto_inicio_lat,
-                    punto_inicio_lon: ruta.punto_inicio_lon,
-                });
+                setFormData(rutaToFormData(ruta));
             } else {
                 Alert.alert('Error', 'No se encontró la ruta');
                 navigation.goBack();
@@ -138,6 +119,94 @@ export default function AddEditScreen({ navigation, route }: Props) {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    /**
+ * Manejar añadir/cambiar foto
+ */
+    const handleAnadirFoto = async () => {
+        try {
+            // Mostrar opciones
+            const opcion = await mostrarOpcionesFoto();
+
+            if (!opcion) return; // Usuario canceló
+
+            let fotoUri: string | null = null;
+
+            if (opcion === 'camera') {
+                fotoUri = await tomarFoto();
+            } else {
+                fotoUri = await seleccionarDeGaleria();
+            }
+
+            // Si se seleccionó/tomó foto, actualizar formulario
+            if (fotoUri) {
+                updateField('foto_principal', fotoUri);
+                Alert.alert('Éxito', 'Foto añadida correctamente');
+            }
+        } catch (error) {
+            console.error('Error al añadir foto:', error);
+            Alert.alert('Error', 'No se pudo añadir la foto');
+        }
+    };
+
+    /**
+     * Manejar eliminar foto
+     */
+    const handleEliminarFoto = () => {
+        Alert.alert(
+            'Eliminar Foto',
+            '¿Estás seguro de que quieres eliminar la foto?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: () => {
+                        updateField('foto_principal', undefined);
+                        Alert.alert('Éxito', 'Foto eliminada');
+                    },
+                },
+            ]
+        );
+    };
+
+    /**
+     * Manejar capturar ubicación GPS
+     */
+    const handleCapturarUbicacion = async () => {
+        try {
+            // Verificar que el GPS esté activado
+            const gpsActivo = await verificarGPSActivado();
+            if (!gpsActivo) return;
+
+            // Obtener coordenadas
+            const coordenadas = await obtenerUbicacionActual();
+
+            if (coordenadas) {
+                updateField('punto_inicio_lat', coordenadas.latitud);
+                updateField('punto_inicio_lon', coordenadas.longitud);
+
+                Alert.alert(
+                    'Ubicación Capturada',
+                    `Coordenadas: ${formatearCoordenadas(coordenadas.latitud, coordenadas.longitud)}`,
+                    [{ text: 'OK' }]
+                );
+            }
+        } catch (error) {
+            console.error('Error al capturar ubicación:', error);
+            Alert.alert('Error', 'No se pudo obtener la ubicación');
+        }
+    };
+
+    /**
+     * Manejar eliminar ubicación
+     */
+    const handleEliminarUbicacion = () => {
+        updateField('punto_inicio_lat', undefined);
+        updateField('punto_inicio_lon', undefined);
+        Alert.alert('Éxito', 'Ubicación eliminada');
+    };
+
 
     // Guardar (crear o actualizar)
     const handleGuardar = async () => {
@@ -334,20 +403,11 @@ export default function AddEditScreen({ navigation, route }: Props) {
             {/* CAMPO: Valoración */}
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Valoración</Text>
-                <View style={styles.valoracionContainer}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <TouchableOpacity
-                            key={star}
-                            onPress={() => updateField('valoracion', star)}
-                        >
-                            <MaterialCommunityIcons
-                                name={star <= formData.valoracion ? 'star' : 'star-outline'}
-                                size={40}
-                                color="#FFC107"
-                            />
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                <RatingStars
+                    rating={formData.valoracion}
+                    onRatingChange={(rating) => updateField('valoracion', rating)}
+                    size={40}
+                />
                 <Text style={styles.valoracionText}>
                     {formData.valoracion} {formData.valoracion === 1 ? 'estrella' : 'estrellas'}
                 </Text>
@@ -367,19 +427,95 @@ export default function AddEditScreen({ navigation, route }: Props) {
                 />
             </View>
 
-            {/* TODO: Botones para Foto y GPS (los añadiremos después) */}
+            {/* SECCIÓN: FOTO */}
             <View style={styles.extrasContainer}>
-                <Text style={styles.extrasTitle}>Extras</Text>
-                <TouchableOpacity style={styles.extraButton} disabled>
-                    <MaterialCommunityIcons name="camera" size={24} color="#999" />
-                    <Text style={styles.extraButtonTextDisabled}>Añadir foto (próximamente)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.extraButton} disabled>
-                    <MaterialCommunityIcons name="crosshairs-gps" size={24} color="#999" />
-                    <Text style={styles.extraButtonTextDisabled}>
-                        Capturar ubicación (próximamente)
-                    </Text>
-                </TouchableOpacity>
+                <Text style={styles.extrasTitle}>Foto de la Ruta</Text>
+
+                {formData.foto_principal ? (
+                    // Mostrar foto seleccionada
+                    <View style={styles.fotoContainer}>
+                        <Image
+                            source={{ uri: formData.foto_principal }}
+                            style={styles.fotoPreview}
+                            resizeMode="cover"
+                        />
+                        <View style={styles.fotoActions}>
+                            <TouchableOpacity
+                                style={styles.fotoActionButton}
+                                onPress={handleAnadirFoto}
+                            >
+                                <MaterialCommunityIcons name="camera-flip" size={20} color="#2196F3" />
+                                <Text style={styles.fotoActionText}>Cambiar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.fotoActionButton}
+                                onPress={handleEliminarFoto}
+                            >
+                                <MaterialCommunityIcons name="delete" size={20} color="#F44336" />
+                                <Text style={[styles.fotoActionText, { color: '#F44336' }]}>Eliminar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ) : (
+                    // Botón para añadir foto
+                    <TouchableOpacity
+                        style={styles.extraButton}
+                        onPress={handleAnadirFoto}
+                    >
+                        <MaterialCommunityIcons name="camera" size={24} color="#2D6A4F" />
+                        <Text style={styles.extraButtonText}>Añadir Foto</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color="#6C757D" />
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            {/* SECCIÓN: GPS */}
+            <View style={styles.extrasContainer}>
+                <Text style={styles.extrasTitle}>Punto de Inicio (GPS)</Text>
+
+                {formData.punto_inicio_lat && formData.punto_inicio_lon ? (
+                    // Mostrar coordenadas capturadas
+                    <View style={styles.gpsContainer}>
+                        <View style={styles.gpsInfo}>
+                            <MaterialCommunityIcons name="map-marker" size={24} color="#2D6A4F" />
+                            <View style={styles.gpsCoords}>
+                                <Text style={styles.gpsLabel}>Latitud:</Text>
+                                <Text style={styles.gpsValue}>{formData.punto_inicio_lat.toFixed(6)}</Text>
+                                <Text style={styles.gpsLabel}>Longitud:</Text>
+                                <Text style={styles.gpsValue}>{formData.punto_inicio_lon.toFixed(6)}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.gpsActions}>
+                            <TouchableOpacity
+                                style={styles.gpsActionButton}
+                                onPress={handleCapturarUbicacion}
+                            >
+                                <MaterialCommunityIcons name="crosshairs-gps" size={20} color="#2196F3" />
+                                <Text style={styles.gpsActionText}>Recapturar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.gpsActionButton}
+                                onPress={handleEliminarUbicacion}
+                            >
+                                <MaterialCommunityIcons name="delete" size={20} color="#F44336" />
+                                <Text style={[styles.gpsActionText, { color: '#F44336' }]}>Eliminar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ) : (
+                    // Botón para capturar ubicación
+                    <TouchableOpacity
+                        style={styles.extraButton}
+                        onPress={handleCapturarUbicacion}
+                    >
+                        <MaterialCommunityIcons name="crosshairs-gps" size={24} color="#2D6A4F" />
+                        <Text style={styles.extraButtonText}>Capturar Ubicación Actual</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color="#6C757D" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* BOTONES DE ACCIÓN */}
@@ -597,5 +733,85 @@ const styles = StyleSheet.create({
     },
     bottomSpacer: {
         height: 40,
+    },
+    extraButtonText: {
+        flex: 1,
+        fontSize: 16,
+        color: '#212529',
+        fontWeight: '500',
+    },
+    fotoContainer: {
+        gap: 12,
+    },
+    fotoPreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 8,
+        backgroundColor: '#E9ECEF',
+    },
+    fotoActions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    fotoActionButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
+        borderRadius: 8,
+        gap: 8,
+    },
+    fotoActionText: {
+        fontSize: 14,
+        color: '#2196F3',
+        fontWeight: '500',
+    },
+    gpsContainer: {
+        gap: 12,
+    },
+    gpsInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 8,
+        gap: 12,
+    },
+    gpsCoords: {
+        flex: 1,
+    },
+    gpsLabel: {
+        fontSize: 12,
+        color: '#6C757D',
+        marginTop: 4,
+    },
+    gpsValue: {
+        fontSize: 16,
+        color: '#212529',
+        fontWeight: '500',
+        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    },
+    gpsActions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    gpsActionButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
+        borderRadius: 8,
+        gap: 8,
+    },
+    gpsActionText: {
+        fontSize: 14,
+        color: '#2196F3',
+        fontWeight: '500',
     },
 });
