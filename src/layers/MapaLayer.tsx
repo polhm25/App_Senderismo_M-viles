@@ -1,34 +1,34 @@
-// src/screens/MapScreen.tsx
+// Pantalla del mapa (pendiente de implementar)
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Map'>;
+type PropiedadesPagina = NativeStackScreenProps<RootStackParamList, 'Map'>;
 
-export default function MapScreen({ navigation }: Props) {
+export default function PantallaMapa({ navigation }: PropiedadesPagina) {
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Mapa de Rutas</Text>
-            <Text style={styles.subtitle}>Mapa con marcadores aparecerá aquí</Text>
+        <View style={estilos.contenedor}>
+            <Text style={estilos.titulo}>Mapa de Rutas</Text>
+            <Text style={estilos.subtitulo}>Mapa con marcadores aparecerá aquí</Text>
         </View>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
+const estilos = StyleSheet.create({
+    contenedor: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
         backgroundColor: '#F8F9FA',
     },
-    title: {
+    titulo: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    subtitle: {
+    subtitulo: {
         fontSize: 16,
         color: '#6C757D',
     },

@@ -1,39 +1,39 @@
-// src/components/EmptyState.tsx
+// Componente que muestra un mensaje cuando no hay datos
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-interface EmptyStateProps {
+interface PropiedadesEstadoVacio {
     icon: string;
     title: string;
     message: string;
 }
 
-export default function EmptyState({ icon, title, message }: EmptyStateProps) {
+export default function EmptyState({ icon, title, message }: PropiedadesEstadoVacio) {
     return (
-        <View style={styles.container}>
+        <View style={estilos.contenedor}>
             <MaterialCommunityIcons name={icon as any} size={80} color="#CED4DA" />
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.message}>{message}</Text>
+            <Text style={estilos.titulo}>{title}</Text>
+            <Text style={estilos.mensaje}>{message}</Text>
         </View>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
+const estilos = StyleSheet.create({
+    contenedor: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 40,
     },
-    title: {
+    titulo: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#495057',
         marginTop: 16,
         marginBottom: 8,
     },
-    message: {
+    mensaje: {
         fontSize: 16,
         color: '#6C757D',
         textAlign: 'center',

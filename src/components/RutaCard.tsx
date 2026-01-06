@@ -1,113 +1,111 @@
-// src/components/RutaCard.tsx
+// Tarjeta que muestra una ruta en la lista
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Ruta } from '../types';
 
-interface RutaCardProps {
+interface PropiedadesTarjetaRuta {
     ruta: Ruta;
     onPress: () => void;
 }
 
-export default function RutaCard({ ruta, onPress }: RutaCardProps) {
+export default function RutaCard({ ruta, onPress }: PropiedadesTarjetaRuta) {
+    // Convertir fecha de "2024-12-20" a "20 dic 2024"
+    const convertirFechaATexto = (fechaISO: string): string => {
+        const fecha = new Date(fechaISO + 'T00:00:00');
+        return fecha.toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    // Obtener color según dificultad
+    const obtenerColorDificultad = (dificultad: string) => {
+        if (dificultad === 'Fácil') {
+            return { backgroundColor: '#4CAF50' };
+        } else if (dificultad === 'Moderada') {
+            return { backgroundColor: '#FFC107' };
+        } else if (dificultad === 'Difícil') {
+            return { backgroundColor: '#FF9800' };
+        } else if (dificultad === 'Muy Difícil') {
+            return { backgroundColor: '#F44336' };
+        }
+        return { backgroundColor: '#757575' };
+    };
+
     return (
-        <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-            {/* Imagen o placeholder */}
-            <View style={styles.imageContainer}>
+        <TouchableOpacity style={estilos.tarjeta} onPress={onPress} activeOpacity={0.7}>
+            {/* Imagen o icono si no hay imagen */}
+            <View style={estilos.contenedorImagen}>
                 {ruta.foto_principal ? (
                     <Image
                         source={{ uri: ruta.foto_principal }}
-                        style={styles.image}
+                        style={estilos.imagen}
                         resizeMode="cover"
                     />
                 ) : (
-                    <View style={styles.imagePlaceholder}>
+                    <View style={estilos.imagenVacia}>
                         <MaterialCommunityIcons name="image-outline" size={40} color="#CED4DA" />
                     </View>
                 )}
 
-                {/* Badge de dificultad flotante */}
-                <View style={[styles.dificultadBadge, getDificultadColor(ruta.dificultad)]}>
-                    <Text style={styles.dificultadText}>{ruta.dificultad}</Text>
+                {/* Etiqueta de dificultad flotante */}
+                <View style={[estilos.etiquetaDificultad, obtenerColorDificultad(ruta.dificultad)]}>
+                    <Text style={estilos.textoDificultad}>{ruta.dificultad}</Text>
                 </View>
             </View>
 
-            {/* Contenido */}
-            <View style={styles.content}>
-                {/* Título */}
-                <Text style={styles.nombre} numberOfLines={1}>
+            {/* Contenido de la tarjeta */}
+            <View style={estilos.contenido}>
+                {/* Nombre de la ruta */}
+                <Text style={estilos.nombre} numberOfLines={1}>
                     {ruta.nombre}
                 </Text>
 
                 {/* Zona con icono */}
-                <View style={styles.zonaContainer}>
+                <View style={estilos.contenedorZona}>
                     <MaterialCommunityIcons name="map-marker" size={16} color="#6C757D" />
-                    <Text style={styles.zona} numberOfLines={1}>
+                    <Text style={estilos.zona} numberOfLines={1}>
                         {ruta.zona}
                     </Text>
                 </View>
 
-                {/* Información en grid */}
-                <View style={styles.infoGrid}>
+                {/* Información en fila */}
+                <View style={estilos.filaInfo}>
                     {/* Distancia */}
-                    <View style={styles.infoItem}>
+                    <View style={estilos.itemInfo}>
                         <MaterialCommunityIcons name="map-marker-distance" size={18} color="#2D6A4F" />
-                        <Text style={styles.infoText}>{ruta.distancia_km} km</Text>
+                        <Text style={estilos.textoInfo}>{ruta.distancia_km} km</Text>
                     </View>
 
                     {/* Duración */}
-                    <View style={styles.infoItem}>
+                    <View style={estilos.itemInfo}>
                         <MaterialCommunityIcons name="clock-outline" size={18} color="#2D6A4F" />
-                        <Text style={styles.infoText}>{ruta.duracion_horas} h</Text>
+                        <Text style={estilos.textoInfo}>{ruta.duracion_horas} h</Text>
                     </View>
 
-                    {/* Valoración */}
+                    {/* Valoración (solo si existe) */}
                     {ruta.valoracion && (
-                        <View style={styles.infoItem}>
+                        <View style={estilos.itemInfo}>
                             <MaterialCommunityIcons name="star" size={18} color="#FFC107" />
-                            <Text style={styles.infoText}>{ruta.valoracion}/5</Text>
+                            <Text style={estilos.textoInfo}>{ruta.valoracion}/5</Text>
                         </View>
                     )}
                 </View>
 
                 {/* Fecha */}
-                <View style={styles.fechaContainer}>
+                <View style={estilos.contenedorFecha}>
                     <MaterialCommunityIcons name="calendar" size={14} color="#ADB5BD" />
-                    <Text style={styles.fechaText}>{formatearFecha(ruta.fecha_realizacion)}</Text>
+                    <Text style={estilos.textoFecha}>{convertirFechaATexto(ruta.fecha_realizacion)}</Text>
                 </View>
             </View>
         </TouchableOpacity>
     );
 }
 
-// Formatear fecha
-function formatearFecha(fechaISO: string): string {
-    const fecha = new Date(fechaISO + 'T00:00:00');
-    return fecha.toLocaleDateString('es-ES', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-    });
-}
-
-// Color según dificultad
-function getDificultadColor(dificultad: string) {
-    switch (dificultad) {
-        case 'Fácil':
-            return { backgroundColor: '#4CAF50' };
-        case 'Moderada':
-            return { backgroundColor: '#FFC107' };
-        case 'Difícil':
-            return { backgroundColor: '#FF9800' };
-        case 'Muy Difícil':
-            return { backgroundColor: '#F44336' };
-        default:
-            return { backgroundColor: '#757575' };
-    }
-}
-
-const styles = StyleSheet.create({
-    card: {
+const estilos = StyleSheet.create({
+    tarjeta: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
         marginHorizontal: 16,
@@ -119,23 +117,23 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 5,
     },
-    imageContainer: {
+    contenedorImagen: {
         width: '100%',
         height: 180,
         position: 'relative',
     },
-    image: {
+    imagen: {
         width: '100%',
         height: '100%',
     },
-    imagePlaceholder: {
+    imagenVacia: {
         width: '100%',
         height: '100%',
         backgroundColor: '#F8F9FA',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    dificultadBadge: {
+    etiquetaDificultad: {
         position: 'absolute',
         top: 12,
         right: 12,
@@ -148,12 +146,12 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    dificultadText: {
+    textoDificultad: {
         color: '#FFFFFF',
         fontSize: 12,
         fontWeight: '700',
     },
-    content: {
+    contenido: {
         padding: 16,
     },
     nombre: {
@@ -162,7 +160,7 @@ const styles = StyleSheet.create({
         color: '#212529',
         marginBottom: 6,
     },
-    zonaContainer: {
+    contenedorZona: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 12,
@@ -173,27 +171,27 @@ const styles = StyleSheet.create({
         color: '#6C757D',
         flex: 1,
     },
-    infoGrid: {
+    filaInfo: {
         flexDirection: 'row',
         gap: 16,
         marginBottom: 12,
     },
-    infoItem: {
+    itemInfo: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
     },
-    infoText: {
+    textoInfo: {
         fontSize: 14,
         color: '#495057',
         fontWeight: '500',
     },
-    fechaContainer: {
+    contenedorFecha: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
     },
-    fechaText: {
+    textoFecha: {
         fontSize: 12,
         color: '#ADB5BD',
     },

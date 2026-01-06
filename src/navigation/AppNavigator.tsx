@@ -1,26 +1,26 @@
-// src/navigation/AppNavigator.tsx
+// Navegador principal de la aplicación
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
-// Importar las diferentes pantallas
-import HomeScreen from '../screens/HomeScreen';
-import DetailScreen from '../screens/DetailScreen';
-import AddEditScreen from '../screens/AddEditScreen';
-import StatsScreen from '../screens/StatsScreen';
-import MapScreen from '../screens/MapScreen';
+// Importar las diferentes pantallas desde la carpeta layers
+import PantallaPrincipal from '../layers/PrincipalLayer';
+import PantallaDetalle from '../layers/DetalleLayer';
+import PantallaFormulario from '../layers/FormularioLayer';
+import PantallaEstadisticas from '../layers/EstadisticasLayer';
+import PantallaMapa from '../layers/MapaLayer';
 
-// Crear el Stack Navigator con tipos
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Crear el navegador de pantallas con tipos
+const Pila = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
     return (
         <NavigationContainer>
-            <Stack.Navigator
+            <Pila.Navigator
                 initialRouteName="Home"
                 screenOptions={{
-                    // Estilos globales del header para TODAS las pantallas
+                    // Estilos globales del encabezado para todas las pantallas
                     headerStyle: {
                         backgroundColor: '#2D6A4F', // Verde bosque
                     },
@@ -28,59 +28,58 @@ export default function AppNavigator() {
                     headerTitleStyle: {
                         fontWeight: 'bold',
                     },
-                    // Animación en Android (por defecto es slide_from_right)
+                    // Animación al cambiar de pantalla
                     animation: 'slide_from_right',
                 }}
             >
-                {/* Pantalla 1: Lista de rutas */}
-                <Stack.Screen
+                {/* Pantalla principal: Lista de rutas */}
+                <Pila.Screen
                     name="Home"
-                    component={HomeScreen}
+                    component={PantallaPrincipal}
                     options={{
                         title: 'Mis Rutas',
-                        // Opcional: ocultar el botón "atrás" porque es la pantalla inicial
+                        // Ocultar el botón de volver porque es la pantalla inicial
                         headerLeft: () => null,
                     }}
                 />
 
-                {/* Pantalla 2: Detalle de una ruta */}
-                <Stack.Screen
+                {/* Pantalla de detalle de una ruta */}
+                <Pila.Screen
                     name="Detail"
-                    component={DetailScreen}
+                    component={PantallaDetalle}
                     options={{
                         title: 'Detalle de Ruta',
-                        // El botón "atrás" aparece automáticamente
                     }}
                 />
 
-                {/* Pantalla 3: Formulario crear/editar */}
-                <Stack.Screen
+                {/* Pantalla de formulario para crear o editar una ruta */}
+                <Pila.Screen
                     name="AddEdit"
-                    component={AddEditScreen}
+                    component={PantallaFormulario}
                     options={({ route }) => ({
-                        // Título dinámico según si es crear o editar
+                        // Título dinámico: si hay rutaId estamos editando, si no, creando
                         title: route.params?.rutaId ? 'Editar Ruta' : 'Nueva Ruta',
                     })}
                 />
 
-                {/* Pantalla 4: Estadísticas */}
-                <Stack.Screen
+                {/* Pantalla de estadísticas */}
+                <Pila.Screen
                     name="Stats"
-                    component={StatsScreen}
+                    component={PantallaEstadisticas}
                     options={{
                         title: 'Estadísticas',
                     }}
                 />
 
-                {/* Pantalla 5: Mapa */}
-                <Stack.Screen
+                {/* Pantalla del mapa */}
+                <Pila.Screen
                     name="Map"
-                    component={MapScreen}
+                    component={PantallaMapa}
                     options={{
                         title: 'Mapa de Rutas',
                     }}
                 />
-            </Stack.Navigator>
+            </Pila.Navigator>
         </NavigationContainer>
     );
 }
