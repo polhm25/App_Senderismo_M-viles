@@ -72,17 +72,20 @@ export default function PantallaFormulario({ navigation, route }: PropiedadesPag
     };
 
     // Cambiar un campo del formulario
-    const cambiarCampo = (nombreCampo: keyof RutaFormData, valor: any) => {
-        // Actualizar el valor
-        const nuevosDatos = { ...datosFormulario };
-        nuevosDatos[nombreCampo] = valor;
-        setDatosFormulario(nuevosDatos);
+    const cambiarCampo = <K extends keyof RutaFormData>(nombreCampo: K, valor: RutaFormData[K]) => {
+        // Actualizar el valor usando el patrón de actualización funcional
+        setDatosFormulario(prev => ({
+            ...prev,
+            [nombreCampo]: valor
+        }));
 
         // Quitar el error de ese campo si existe
-        if (erroresDeValidacion[nombreCampo]) {
-            const nuevosErrores = { ...erroresDeValidacion };
-            delete nuevosErrores[nombreCampo];
-            setErroresDeValidacion(nuevosErrores);
+        if (erroresDeValidacion[nombreCampo as string]) {
+            setErroresDeValidacion(prev => {
+                const nuevosErrores = { ...prev };
+                delete nuevosErrores[nombreCampo as string];
+                return nuevosErrores;
+            });
         }
     };
 

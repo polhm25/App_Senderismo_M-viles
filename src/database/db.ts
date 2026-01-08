@@ -2,16 +2,10 @@
 import * as SQLite from 'expo-sqlite';
 import { Ruta, Estadisticas } from '../types';
 
-/**
- * Abrir/crear la base de datos
- * El archivo se guardará en el dispositivo como "senderismo.db"
- */
+// nombre con el que se guarda el archivo en el dispositivo
 const db = SQLite.openDatabaseSync('senderismo.db');
 
-/**
- * Inicializar la base de datos (crear tablas si no existen)
- * EJECUTAR ESTO AL INICIO DE LA APP (en App.tsx useEffect)
- */
+// inicializa la base de datos
 export const initDatabase = async (): Promise<void> => {
     try {
         await db.execAsync(`
@@ -42,11 +36,7 @@ export const initDatabase = async (): Promise<void> => {
     }
 };
 
-/**
- * ============================================
- * CRUD: CREATE - Insertar nueva ruta
- * ============================================
- */
+// INSERT para crear nuevas rutas
 export const insertarRuta = async (ruta: Omit<Ruta, 'id' | 'fecha_creacion'>): Promise<number> => {
     try {
         const result = await db.runAsync(
@@ -79,11 +69,7 @@ export const insertarRuta = async (ruta: Omit<Ruta, 'id' | 'fecha_creacion'>): P
     }
 };
 
-/**
- * ============================================
- * CRUD: READ - Obtener todas las rutas
- * ============================================
- */
+// SELECT para obtener todas las rutas
 export const obtenerTodasLasRutas = async (): Promise<Ruta[]> => {
     try {
         const rutas = await db.getAllAsync<Ruta>(
@@ -98,11 +84,7 @@ export const obtenerTodasLasRutas = async (): Promise<Ruta[]> => {
     }
 };
 
-/**
- * ============================================
- * CRUD: READ - Obtener UNA ruta por ID
- * ============================================
- */
+// SELECT para obtener una ruta por ID especifico
 export const obtenerRutaPorId = async (id: number): Promise<Ruta | null> => {
     try {
         const ruta = await db.getFirstAsync<Ruta>(
@@ -123,11 +105,7 @@ export const obtenerRutaPorId = async (id: number): Promise<Ruta | null> => {
     }
 };
 
-/**
- * ============================================
- * CRUD: UPDATE - Actualizar una ruta existente
- * ============================================
- */
+// UPDATE para editar una ruta existente
 export const actualizarRuta = async (id: number, ruta: Omit<Ruta, 'id' | 'fecha_creacion'>): Promise<void> => {
     try {
         await db.runAsync(
@@ -169,11 +147,7 @@ export const actualizarRuta = async (id: number, ruta: Omit<Ruta, 'id' | 'fecha_
     }
 };
 
-/**
- * ============================================
- * CRUD: DELETE - Eliminar una ruta
- * ============================================
- */
+// DELETE para eliminar una ruta
 export const eliminarRuta = async (id: number): Promise<void> => {
     try {
         await db.runAsync('DELETE FROM rutas WHERE id = ?', [id]);
@@ -184,11 +158,7 @@ export const eliminarRuta = async (id: number): Promise<void> => {
     }
 };
 
-/**
- * ============================================
- * EXTRA: Obtener estadísticas generales
- * ============================================
- */
+// SELECT con operaciones para calcular estadisticas y medias de las rutas
 export const obtenerEstadisticas = async (): Promise<Estadisticas> => {
     try {
         // Total de rutas
@@ -234,12 +204,7 @@ export const obtenerEstadisticas = async (): Promise<Estadisticas> => {
     }
 };
 
-/**
- * ============================================
- * UTILIDAD: Insertar datos de prueba
- * SOLO PARA DESARROLLO - eliminar en producción
- * ============================================
- */
+// DATOS DE PRUEBA
 export const insertarDatosDePrueba = async (): Promise<void> => {
     try {
         // Verificar si ya hay datos
